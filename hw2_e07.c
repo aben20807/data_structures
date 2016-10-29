@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char fileName[100+1];
+char fileName[1000+1];
 FILE *fin;
 
 int value(const int, int, int, int, int, int[]);
@@ -66,7 +66,7 @@ int value(const int n, int a, int b, int i, int j, int e[]){
 
 void openFile(FILE **fin, char *fileName){
 	//printf("%s\n", fileName);
-	if(strlen(fileName) > 100){
+	if(strlen(fileName) > 1000){
 		printf("The length of file name is too long\n");
 		exit(1);
 	}
