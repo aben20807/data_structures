@@ -9,47 +9,53 @@
 
 int M = 0;
 int N = 0;
-int numOfAnswer = 0;
+int numOfStep = 0;
+/*start and destination point*/
 typedef struct position{
 	int row;
 	int col;
 } *pos;
-pos s;
-pos d;
-typedef struct node *nodePointer;
-typedef struct node{
+pos s;//start
+pos d;//destination
+/*element of stack*/
+typedef struct stack_node{
 	int row;
 	int col;
-	nodePointer direction[8];
-} *nodePointer;
-
+	struct stack_node *next;
+} stack_list;
+typedef stack_list *link;
+link path = NULL;
+/*all kinds of move*/
+int move[8][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+/*function*/
 void openFile(FILE **, const char *);
 void countMN(FILE *);
 void readMaze(FILE *, char (*)[]);
-nodePointer createNode(const int, const int);
-nodePointer createTree(nodePointer, const char (*)[]);
-nodePointer addNode(const nodePointer, const nodePointer, const int);
-int checkRange(const int, const int, const int, const int);
+void createMark(char (*)[], int (*)[]);
+link push(link, int, int);
+link pop(link, int *, int *);
+int seekPath(int (*)[]);
+void printAns(char (*)[], int (*)[]);
 
 int main(){
 	FILE *fin;
 	int i, j;
 	openFile(&fin, "in.txt");
 	countMN(fin);
-	//printf("%d\n%d\n", M, N);
+	//printf("%d\n%d\n", M, N);//test for M, N
 	char maze[M][N];
-	for(i = 0; i < M; i++){
-		for(j = 0; j < N; j++){
-			maze[i][j] = '0';
-		}
-	}
+	int mark[M+2][N+2];
+	memset(maze, '0', sizeof(maze));//init of maze
 	openFile(&fin, "in.txt");
-	readMaze(fin, maze);
-	//printf("(%d, %d), (%d, %d)\n", s -> row, s-> col, d -> row, d -> col);
-	nodePointer root = createNode(s -> row, s -> col);
-	//printf("%d, %d\n", root -> row, root -> col);
-	nodePointer tree = createTree(root, maze);
-	printf("%d\n", numOfAnswer);
+	readMaze(fin, maze);//input maze from file
+	createMark(maze, mark);//creat mark for seeking path
+	if(seekPath(mark)){//if there is a solution
+		printAns(maze, mark);
+		printf("%d %s\n", numOfStep, ((numOfStep > 1) ? "steps" : "step"));
+	}
+	else{
+		printf("No route\n");
+	}
 	return 0;
 }
 
@@ -91,15 +97,13 @@ void readMaze(FILE *fin, char (*maze)[N]){
 	MALLOC(d, sizeof(*d));
 	while((c = fgetc(fin)) != EOF)//read all char until end of file
 	{
-		if(c == 's'){
+		if(c == 's'){//define the position of start
 			s -> row = i;
 			s -> col = j;
-			//printf("%d, %d\n", i, j);
 		}
-		if(c == 'd'){
+		if(c == 'd'){//define the position of destination
 			d -> row = i;
 			d -> col = j;
-			//printf("%d, %d\n", i, j);
 		}
 		if(c == '\n'){//when read '\n' change to next row
 			i++;
@@ -109,104 +113,140 @@ void readMaze(FILE *fin, char (*maze)[N]){
 			maze[i][j++] = c;//store c in maze[][]
 		}
 	}
-	//printf("%c, %c\n", maze[s -> row][s -> col], maze[d -> row][d -> col]);
 	fclose(fin);//close file
 }
 
-nodePointer createNode(const int _row, const int _col){
-	nodePointer tmp;
-	MALLOC(tmp, sizeof(*tmp));
-	tmp -> row = _row;
-	tmp -> col = _col;
-	int i;
-	for(i = 0; i < 8; i++){
-		tmp -> direction[i] = NULL;
+void createMark(char (*maze)[N], int (*mark)[N+2]){
+	int i, j;
+	//create a array with one more layer in four side and full of 1, which is used to be walls
+	for(i = 0; i < M+2; i++){
+		for(j = 0; j < N+2; j++){
+			mark[i][j] = 1;
+		}
 	}
-	return tmp;
-}
-
-nodePointer createTree(nodePointer root, const char (*maze)[N]){
-	nodePointer tmp;
-	tmp = root;
-	int tmpr = tmp -> row;
-	int tmpc = tmp -> col;
-	if(tmpr == d -> row && tmpc == d -> col){
-		numOfAnswer++;
+	for(i = 1; i < M+1; i++){//let maze set in the walls
+		for(j = 1; j < N+1; j++){
+			if(maze[i-1][j-1] == 's' || maze[i-1][j-1] == 'd'){
+				mark[i][j] = 0;
+			}
+			else{
+				mark[i][j] = (int)maze[i-1][j-1] - '0';
+			}
+		}
 	}
-	printf("(%d, %d)\n", tmpr, tmpc);
-	printf("%d, %d, %d, %d, %d, %d, %d, %d\n",
-			checkRange(tmpr, tmpc, -1, -1),
-			checkRange(tmpr, tmpc, -1, 0),
-			checkRange(tmpr, tmpc, -1, 1),
-			checkRange(tmpr, tmpc, 0, -1),
-			checkRange(tmpr, tmpc, 0, 1),
-			checkRange(tmpr, tmpc, 1, -1),
-			checkRange(tmpr, tmpc, 1, 0),
-			checkRange(tmpr, tmpc, 1, 1));
-	//while(1){
-		if(checkRange(tmpr, tmpc, -1, -1)){
-			if(maze[tmpr-1][tmpc-1] == '0'){
-				//root = createTree(addNode(tmp, createNode(tmpr-1, tmpc-1), 0), maze);
-				createTree(addNode(tmp, createNode(tmpr-1, tmpc-1), 0), maze);
-			}
-		}
-		else if(checkRange(tmpr, tmpc, -1, 0)){
-			if(maze[tmpr-1][tmpc] == '0'){
-				//root = createTree(addNode(tmp, createNode(tmpr-1, tmpc), 1), maze);
-				createTree(addNode(tmp, createNode(tmpr-1, tmpc), 1), maze);
-			}
-		}
-		else if(checkRange(tmpr, tmpc, -1, 1)){
-			if(maze[tmpr-1][tmpc+1] == '0'){
-				//root = createTree(addNode(tmp, createNode(tmpr-1, tmpc+1), 2), maze);
-				createTree(addNode(tmp, createNode(tmpr-1, tmpc+1), 2), maze);
-			}
-		}
-		else if(checkRange(tmpr, tmpc, 0, -1)){
-			if(maze[tmpr][tmpc-1] == '0'){
-				//root = createTree(addNode(tmp, createNode(tmpr, tmpc-1), 3), maze);
-				createTree(addNode(tmp, createNode(tmpr, tmpc-1), 3), maze);	
-			}
-		}
-		else if(checkRange(tmpr, tmpc, 0, 1)){
-			if(maze[tmpr][tmpc+1] == '0'){
-				//root = createTree(addNode(tmp, createNode(tmpr, tmpc+1), 4), maze);
-				createTree(addNode(tmp, createNode(tmpr, tmpc+1), 4), maze);
-			}
-		}
-		else if(checkRange(tmpr, tmpc, 1, -1)){
-			if(maze[tmpr+1][tmpc-1] == '0'){
-				//root = createTree(addNode(tmp, createNode(tmpr+1, tmpc-1), 5), maze);
-				createTree(addNode(tmp, createNode(tmpr+1, tmpc-1), 5), maze);
-			}
-		}
-		else if(checkRange(tmpr, tmpc, 1, 0)){
-			if(maze[tmpr+1][tmpc] == '0'){
-				//root = createTree(addNode(tmp, createNode(tmpr+1, tmpc), 6), maze);
-				createTree(addNode(tmp, createNode(tmpr+1, tmpc), 6), maze);
-			}
-		}
-		else if(checkRange(tmpr, tmpc, 1, 1)){
-			if(maze[tmpr+1][tmpc+1] == '0'){
-				//root = createTree(addNode(tmp, createNode(tmpr+1, tmpc+1), 7), maze);
-				createTree(addNode(tmp, createNode(tmpr+1, tmpc+1), 7), maze);
-			}
-		}
-		else{
-			return root;
-		}
-	//}
-	//return root;
 }
 
-nodePointer addNode(const nodePointer pre, const nodePointer tmp, const int direc){
-	pre -> direction[direc] = tmp;
-	return tmp;
+link push(link stack, int row, int col)
+{//push function of stack
+   link new_node;
+   new_node = (link)malloc(sizeof(stack_list));
+   if ( !new_node )
+   {
+	   printf("Cannot malloc!\n");
+	   return NULL;
+   }
+   new_node->row = row;
+   new_node->col = col;
+   new_node->next = stack;
+   stack = new_node;
+   return stack;
 }
 
-int checkRange(const int r, const int c, const int i, const int j){
-	if(r + i >= 0 && r + i < M && c + j >= 0 && c + j < N)
-		return 1;
-	else
-		return 0;
+link pop(link stack, int *row, int *col)
+{//pop function of stack
+
+   if (stack != NULL)
+   {
+	  link top = stack;
+      stack = stack->next;
+      *row = stack->row;
+      *col = stack->col;
+      free(top);
+      return stack;
+   }
+   else
+      *row = -1;
+}
+
+int seekPath(int (*mark)[N+2]){
+	int success = 0;//check if have solution
+	int row = d->row+1;//seek from destination
+	int col = d->col+1;
+	while(1){
+		if(row == s->row+1 && col == s->col+1){//arrive at start
+			success = 1;
+			break;
+		}
+		if(numOfStep > M*N+10){//num of steps more than num of maze, in case of other situation, so +10
+			success = 0;
+			break;
+		}
+		mark[row][col] = 2;//change to 2 when having passed
+		if(mark[row-1][col-1] <= 0){
+			row = row - 1;
+			col = col - 1;
+			numOfStep++;
+			path = push(path, row, col);
+		}
+		else if(mark[row-1][col] <= 0){
+			row = row - 1;
+			numOfStep++;
+			path = push(path, row, col);
+		}
+		else if(mark[row-1][col+1] <= 0){
+			row = row - 1;
+			col = col + 1;
+			numOfStep++;
+			path = push(path, row, col);
+		}
+		else if(mark[row][col-1] <= 0){
+			col = col - 1;
+			numOfStep++;
+			path = push(path, row, col);
+		}
+		else if(mark[row][col+1] <= 0){
+			col = col + 1;
+			numOfStep++;
+			path = push(path, row, col);
+		}
+		else if(mark[row+1][col-1] <= 0){
+			row = row + 1;
+			col = col - 1;
+			numOfStep++;
+			path = push(path, row, col);
+		}
+		else if(mark[row+1][col] <= 0){
+			row = row + 1;
+			numOfStep++;
+			path = push(path, row, col);
+		}
+		else if(mark[row+1][col+1] <= 0){
+			row = row + 1;
+			col = col + 1;
+			numOfStep++;
+			path = push(path, row, col);
+		}
+		else{//no next step can keep going, so pop out
+			mark[row][col] = 3;
+			path = pop(path, &row, &col);
+		}
+	}
+	return success;
+}
+
+void printAns(char (*maze)[N], int (*mark)[N+2]){
+	int i, j;
+	for(i = 1; i < M+1; i++){
+		for(j = 1; j < N+1; j++){
+			if(i-1 == s->row && j-1 == s->col)
+				printf("s");
+			else if(i-1 == d->row && j-1 == d->col)
+				printf("d");
+			else if(mark[i][j] == 2 || mark[i][j] == 3)
+				printf("*");
+			else
+				printf("%d", maze[i-1][j-1]-'0');
+		}
+		printf("\n");
+	}
 }
