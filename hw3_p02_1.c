@@ -1,9 +1,10 @@
 #include <stdio.h>
 
+#define MAX_SIZE 4
 typedef struct{
     char data;
 }element;
-element nc_queue[4];
+element nc_queue[MAX_SIZE];
 int rear = -1;
 int front = -1;
 
@@ -45,17 +46,17 @@ int main(){
 
 void initQ(){
     int i;
-    for (i = 0; i < 4; i++){
+    for (i = 0; i < MAX_SIZE; i++){
         nc_queue[i].data = ' ';
     }
 }
 
 void addQ(char num){
-    if(rear == 3 && front != -1){
+    if(rear == MAX_SIZE-1 && front != -1){
         move();
         nc_queue[++rear].data = num;
     }
-    else if(rear == 3){
+    else if(rear == MAX_SIZE-1){
         qFull();
     }
     else{
@@ -83,10 +84,10 @@ void qEmpty(){
 
 void move(){
     int i;
-    for(i = 0; i < 4-front-1; i++){
+    for(i = 0; i < MAX_SIZE-front-1; i++){
         nc_queue[i] = nc_queue[front+i+1];
     }
-    for(i; i < 4; i++){
+    for(i; i < MAX_SIZE; i++){
         nc_queue[i].data = ' ';
     }
     rear -= (front+1);
