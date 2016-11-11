@@ -5,8 +5,8 @@ typedef struct{
     char data;
 }element;
 element c_queue[MAX_SIZE];
-int rear = -1;
-int front = -1;
+int rear = 0;
+int front = 0;
 
 void initQ();
 void addQ(char);
@@ -53,12 +53,12 @@ void initQ(){
 }
 
 void addQ(char num){
-    rear = (rear + 1) % (MAX_SIZE);
     if(front == rear && isFull()){
         qFull();
     }
     else{
         c_queue[rear].data = num;
+        rear = (rear + 1) % (MAX_SIZE);
     }
 }
 
@@ -68,7 +68,7 @@ element deleteQ(){
         return c_queue[front];
     }
     else{
-        c_queue[front + 1].data = ' ';
+        c_queue[front].data = ' ';
         front = (front + 1) % (MAX_SIZE);
         return c_queue[front];
     }
@@ -83,7 +83,7 @@ void qEmpty(){
     return;
 }
 
-int isEmpty(){
+int isEmpty(){//check if empty
     int i;
     int is = 1;
     for(i = 0; i < MAX_SIZE; i++){
@@ -93,7 +93,7 @@ int isEmpty(){
     return is;
 }
 
-int isFull(){
+int isFull(){//check if full
     int i;
     int is = 1;
     for(i = 0; i < MAX_SIZE; i++){

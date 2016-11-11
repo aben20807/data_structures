@@ -72,6 +72,7 @@ element deleteQ(){
     nc_queue[front+1].data = ' ';
     return nc_queue[++front];
 }
+
 void qFull(){
     printf("Queue is full\n");
     return;
@@ -82,7 +83,7 @@ void qEmpty(){
     return;
 }
 
-void move(){
+void move(){//when not real full move element
     int i;
     for(i = 0; i < MAX_SIZE-front-1; i++){
         nc_queue[i] = nc_queue[front+i+1];
