@@ -35,10 +35,10 @@ void createMark(char (*)[], int (*)[]);
 link push(link, int, int);
 link pop(link, int *, int *);
 int seekPath(int (*)[]);
-void printAns(char (*)[], int (*)[]);
+void printAns(FILE **, char (*)[], int (*)[]);
 
 int main(){
-	FILE *fin;
+	FILE *fin, *fout;
 	int i, j;
 	openFile(&fin, "in.txt");
 	countMN(fin);
@@ -50,12 +50,14 @@ int main(){
 	readMaze(fin, maze);//input maze from file
 	createMark(maze, mark);//creat mark for seeking path
 	if(seekPath(mark)){//if there is a solution
-		printAns(maze, mark);
-		printf("%d %s\n", numOfStep, ((numOfStep > 1) ? "steps" : "step"));
+		fout = fopen("out.txt", "w");
+		printAns(&fout, maze, mark);
+		fprintf(fout, "%d %s\n", numOfStep, ((numOfStep > 1) ? "steps" : "step"));
 	}
 	else{
 		printf("No route\n");
 	}
+	fclose(fout);
 	return 0;
 }
 
@@ -234,19 +236,19 @@ int seekPath(int (*mark)[N+2]){
 	return success;
 }
 
-void printAns(char (*maze)[N], int (*mark)[N+2]){
+void printAns(FILE **fout, char (*maze)[N], int (*mark)[N+2]){
 	int i, j;
 	for(i = 1; i < M+1; i++){
 		for(j = 1; j < N+1; j++){
 			if(i-1 == s->row && j-1 == s->col)
-				printf("s");
+				fprintf(*fout, "s");
 			else if(i-1 == d->row && j-1 == d->col)
-				printf("d");
+				fprintf(*fout, "d");
 			else if(mark[i][j] == 2 || mark[i][j] == 3)
-				printf("*");
+				fprintf(*fout, "*");
 			else
-				printf("%d", maze[i-1][j-1]-'0');
+				fprintf(*fout, "%d", maze[i-1][j-1]-'0');
 		}
-		printf("\n");
+		fprintf(*fout, "\r\n");
 	}
 }

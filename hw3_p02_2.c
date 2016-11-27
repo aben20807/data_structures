@@ -40,7 +40,7 @@ int main(){
             continue;
         }
         printf("Front=%d,Rear=%d\n", front, rear);
-        printf("Queue:[%c][%c][%c][%c]\n\n", c_queue[0].data, c_queue[1].data, c_queue[2].data, c_queue[3].data);
+        printf("Queue:[%c][%c][%c][%c]\n", c_queue[0].data, c_queue[1].data, c_queue[2].data, c_queue[3].data);
     }
     return 0;
 }
