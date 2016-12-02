@@ -27,17 +27,15 @@ typedef struct matrixNode{
 
 matrixPtr newEntryNode(const int, const int, const int);
 matrixPtr readMatrix();
-matrixPtr multiplication(const matrixPtr, const matrixPtr, int *);
+matrixPtr transpose(const matrixPtr);
 void printMatrix(const matrixPtr);
 void printTransposeMatrix(const matrixPtr);
 
 int main(){
 	int ok;
-	matrixPtr m1 = readMatrix();
-	matrixPtr m2 = readMatrix();
-	matrixPtr m = multiplication(m1, m2, &ok);
-	if(ok)
-		printMatrix(m);
+	matrixPtr m = readMatrix();
+	matrixPtr t = transpose(m);
+	printMatrix(t);
 	return 0;
 }
 
@@ -123,30 +121,24 @@ matrixPtr readMatrix(){
 	return smatNode;
 }
 
-matrixPtr multiplication(const matrixPtr m1, const matrixPtr m2, int *ok){
-	*ok = 1;
-	int mRow = m1->u.entry.row;
-	int mCol = m2->u.entry.col;
-	if(m1->u.entry.col != m2->u.entry.row){
-		printf("Two input matrix cannot do multiplication.\n");
-		*ok = 0;
-		return m1;
-	}
+matrixPtr transpose(const matrixPtr m){
+	int mRow = m->u.entry.col;
+	int mCol = m->u.entry.row;
 	int i, j, k;
 	int mHead = ((mRow > mCol)? mRow: mCol);
 
-	matrixPtr m, tmp1, tmp2, tmp1Row, tmp2Col;
-	matrixPtr last, tmp;
+	matrixPtr t, tmpCol;
+	matrixPtr last, tmp, tmpE;
 	matrixPtr rowHeaderNode[mHead];
 	matrixPtr colHeaderNode[mHead];
-	MALLOC(m, sizeof(*m));
-	m -> tag = entry;
-	m -> u.entry.row = mRow;
-	m -> u.entry.col = mCol;
+	MALLOC(t, sizeof(*t));
+	t -> tag = entry;
+	t -> u.entry.row = mRow;
+	t -> u.entry.col = mCol;
 
 	for(i = 0; i < mHead; i++){
-		MALLOC(tmp1, sizeof(*tmp1));
-		colHeaderNode[i] = tmp1;
+		MALLOC(tmp, sizeof(*tmp));
+		colHeaderNode[i] = tmp;
 		colHeaderNode[i] -> tag = head;
 		colHeaderNode[i] -> right = NULL;
 		colHeaderNode[i] -> down = NULL;
@@ -156,8 +148,8 @@ matrixPtr multiplication(const matrixPtr m1, const matrixPtr m2, int *ok){
 		}
 	}
 	for(i = 0; i < mHead; i++){
-		MALLOC(tmp1, sizeof(*tmp1));
-		rowHeaderNode[i] = tmp1;
+		MALLOC(tmp, sizeof(*tmp));
+		rowHeaderNode[i] = tmp;
 		rowHeaderNode[i] -> tag = head;
 		rowHeaderNode[i] -> right = NULL;
 		rowHeaderNode[i] -> down = NULL;
@@ -166,54 +158,34 @@ matrixPtr multiplication(const matrixPtr m1, const matrixPtr m2, int *ok){
 			rowHeaderNode[i-1] -> u.next = rowHeaderNode[i];
 		}
 	}
-	m -> right = colHeaderNode[0];
-	m -> down = rowHeaderNode[0];
-	tmp1Row = m1 -> down;
-	tmp2Col = m2 -> right;
+	t -> right = colHeaderNode[0];
+	t -> down = rowHeaderNode[0];
 	//printf("(%d, %d)\n", mRow, mCol);
-	int tmpValue;
-	for(i = 0; i < mRow; i++){
+	tmpCol = m -> right;
+	for(i = 0; i < m -> u.entry.col; i++){
 		last = rowHeaderNode[i];
-		//printf("i=%d\n", i);
-		tmp1 = tmp1Row -> right;
-		for(j = 0; j < mCol; j++){
-			//printf("j=%d\n", j);
-			tmpValue = 0;
-			tmp2 = tmp2Col -> down;
-			for(k = 0; k < m1 -> u.entry.col; k++){
-				if(tmp1 != NULL && tmp2 != NULL){
-					if((i == tmp1 -> u.entry.row) && (k == tmp1 -> u.entry.col) &&
-					   (k == tmp2 -> u.entry.row) && (j == tmp2 -> u.entry.col)){
-						tmpValue += (tmp1 -> u.entry.value)*(tmp2 -> u.entry.value);
-						tmp1 = tmp1 -> right;
-						tmp2 = tmp2 -> down;
-						//printf("(%d, %d)*(%d, %d)=%d\n", i, k, k, j, tmpValue);
-					}
-					else if((i == tmp1 -> u.entry.row) && (k == tmp1 -> u.entry.col)){
-						tmp1 = tmp1 -> right;
-					}
-					else if((k == tmp2 -> u.entry.row && j == tmp2 -> u.entry.col)){
-						tmp2 = tmp2 -> down;
-					}
+		tmp = tmpCol -> down;
+		for(j = 0; j < m -> u.entry.row; j++){
+			if(tmp != NULL){
+				//printf("%d, %d\n", tmp->u.entry.row, tmp->u.entry.col);
+				if((i == (tmp -> u.entry.col)) && (j == (tmp -> u.entry.row))){
+					//printf("%d", tmp->u.entry.value);
+					tmpE = newEntryNode(i, j, tmp -> u.entry.value);
+					last -> right = tmpE;
+					last = tmpE;
+					colHeaderNode[j] -> down = tmp;
+					colHeaderNode[j]  = tmp;
+					tmp = tmp -> down;
 				}
 			}
-			//printf(">%d\n", tmpValue);
-			tmp = newEntryNode(i, j, tmpValue);
-			last -> right = tmp;
-			last = tmp;
-			colHeaderNode[j] -> down = tmp;
-			colHeaderNode[j] = tmp;
-			tmp1 = tmp1Row -> right;
-			tmp2Col = tmp2Col -> u.next;
 		}
 		last -> right = NULL;
-		tmp1Row = tmp1Row -> u.next;
-		tmp2Col = m2 -> right;//back to first col
+		tmpCol = tmpCol -> u.next;
 	}
 	for(i = 0; i < mCol; i++){
 		colHeaderNode[i] -> down = NULL;
 	}
-	return m;
+	return t;
 }
 
 void printMatrix(const matrixPtr m){
