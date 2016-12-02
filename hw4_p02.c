@@ -32,7 +32,6 @@ void printMatrix(const matrixPtr);
 void printTransposeMatrix(const matrixPtr);
 
 int main(){
-	int ok;
 	matrixPtr m = readMatrix();
 	matrixPtr t = transpose(m);
 	printMatrix(t);
