@@ -125,8 +125,16 @@ void changePriority(int heap[]){
 			}
 			if(find){
 				heap[i] = after;
-				child = i;
-				parent = i/2;
+				if(2*i+1 < N+1){
+					child = ((heap[2*i] > heap[2*i+1])? 2*i: 2*i+1);
+				}
+				else if(2*i < N+1){
+					child = 2*1;
+				}
+				else{
+					child = i;
+				}
+				parent = child/2;
 				while(child > 1 && heap[parent] < heap[child]){
 					SWAP(heap[parent], heap[child]);
 					child = parent;
@@ -146,6 +154,7 @@ void changePriority(int heap[]){
 		else{
 			printf("Please enter 'Y' or 'N'!\n");
 			continue;
+			getchar();
 		}
 		getchar();//to get the '\n' after entering number
 	}

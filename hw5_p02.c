@@ -117,6 +117,7 @@ void deleteElement(int heap[]){
 			QueryPerformanceFrequency(&ts);//count execution time
 			QueryPerformanceCounter(&t1);//count execution time
 			for(i = 1; i < N+1; i++){
+				Sleep(1);
 				if(heap[i] == dele){
 					find = 1;
 					break;
@@ -125,12 +126,21 @@ void deleteElement(int heap[]){
 			if(find){
 				heap[i] = heap[N];
 				N--;
-				child = i;
-				parent = i/2;
+				if(2*i+1 < N+1){
+					child = ((heap[2*i] > heap[2*i+1])? 2*i: 2*i+1);
+				}
+				else if(2*i < N+1){
+					child = 2*1;
+				}
+				else{
+					child = i;
+				}
+				parent = child/2;
 				while(child > 1 && heap[parent] < heap[child]){
 					SWAP(heap[parent], heap[child]);
 					child = parent;
 					parent = parent / 2;
+					Sleep(1);
 				}
 			}
 			else{
@@ -145,6 +155,7 @@ void deleteElement(int heap[]){
 		else{
 			printf("Please enter 'Y' or 'N'!\n");
 			continue;
+			getchar();
 		}
 		getchar();//to get the '\n' after entering number
 	}
