@@ -21,8 +21,8 @@ typedef struct{
 } *headNode;
 
 void openFile(FILE **, const char *);//open file
-nodePtr readData(FILE *, headNode [], const int, int []);
-void createEe(const headNode [], int [], const int, const int[]);
+nodePtr readData(FILE *, headNode [], const int);
+void createEe(const headNode [], int [], const int);
 
 int main()
 {
@@ -32,12 +32,12 @@ int main()
     fscanf(fin, "%d", &numOfVertex);
     headNode hNode[numOfVertex];
     int isStart[numOfVertex];
-    readData(fin, hNode, numOfVertex, isStart);
+    readData(fin, hNode, numOfVertex);
     fclose(fin);
 
     int ee[numOfVertex];
-    createEe(hNode, ee, numOfVertex, isStart);
-    // int i;
+    createEe(hNode, ee, numOfVertex);
+    int i;
     // for(i = 0; i < numOfVertex; i++){//print Adjacency lists
     //     printf("%d : %d(count) ", i, hNode[i]->count);
     //     nodePtr test = hNode[i]->link;
@@ -47,6 +47,9 @@ int main()
     //     }
     //     printf("\n");
     // }
+	for(i = 0; i < numOfVertex; i++){
+		printf("%d\n", ee[i]);
+	}
     return 0;
 }
 
@@ -62,13 +65,12 @@ void openFile(FILE **fin, const char *fileName){
 	}
 }
 
-nodePtr readData(FILE *fin, headNode hNode[], const int numOfVertex, int isStart[]){
+nodePtr readData(FILE *fin, headNode hNode[], const int numOfVertex){
     int i, j;
     for(i = 0; i < numOfVertex; i++){
         MALLOC(hNode[i], sizeof(*hNode[i]));
         hNode[i]->count = 0;
         hNode[i]->link = NULL;
-        isStart[i] = 1;
     }
     int tmpValue;
     headNode tmpHead;
@@ -83,39 +85,54 @@ nodePtr readData(FILE *fin, headNode hNode[], const int numOfVertex, int isStart
                 nodePtr tmpNode;
                 MALLOC(tmpNode, sizeof(*tmpNode));
                 tmpNode->vertex = j;
-                isStart[j] = 0;
+				hNode[j]->count++;
                 tmpNode->dur = tmpValue;
                 tmpNode->link = NULL;
-                if(tmpHead->count == 0){
+                if(tmpHead->link == NULL){
                     tmpHead->link = tmpNode;
                 }
                 else{
                     tmpCurrent->link = tmpNode;
                 }
-                hNode[i]->count ++;
+                // hNode[i]->count ++;
                 tmpCurrent = tmpNode;
             }
         }
     }
 }
 
-void createEe(const headNode hNode[], int ee[], const int numOfVertex, const int isStart[]){
-    int i, j, startEvent = 0;
-    int eeStack[numOfVertex];
-	nodePtr current;
-	MALLOC(current, sizeof(*current));
-    for(i = 0; i < numOfVertex; i++){
-        eeStack[i] = -1;//init ee stack
+void createEe(const headNode hNode[], int ee[], const int numOfVertex){
+	int i, j, k, top;
+	for(i = 0; i < numOfVertex; i++){
         ee[i] = 0;//init ee
-        if(isStart[i] == 1){
-			startEvent = i;
-            current = hNode[i]->link;//choose start
-        }
     }
-    for(i = 0; i < numOfVertex; i++){
-        for(j = 0; j < hNode[startEvent]->count; j++){
-            ee[current->vertex] += current->dur;
-            current = current->link;
-        }
-    }
+	nodePtr ptr;
+	top = -1;
+	for(i = 0; i < numOfVertex; i++){
+		if(!hNode[i]->count){
+			hNode[i]->count = top;
+			top = i;
+		}
+	}
+	for(i = 0; i < numOfVertex; i++){
+		if(top == -1){
+			printf("has a cycle\n");
+			exit(1);
+		}
+		else{
+			j = top;
+			top = hNode[top]->count;
+			for(ptr = hNode[j]->link; ptr; ptr = ptr->link){
+				k = ptr->vertex;
+				if(ee[k] < ee[j] + ptr->dur){
+					ee[k] = ee[j] + ptr->dur;
+				}
+				hNode[k]->count--;
+				if(!hNode[k]->count){
+					hNode[k]->count = top;
+					top = k;
+				}
+			}
+		}
+	}
 }
