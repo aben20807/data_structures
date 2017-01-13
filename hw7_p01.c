@@ -21,7 +21,8 @@ typedef struct{
 } *headNode;
 
 void openFile(FILE **, const char *);//open file
-nodePtr readData(FILE *, headNode [], const int);
+nodePtr readData(FILE *, headNode [], const int, int []);
+void createEe(const headNode [], int [], const int, const int[]);
 
 int main()
 {
@@ -30,19 +31,22 @@ int main()
     int numOfVertex = 0;
     fscanf(fin, "%d", &numOfVertex);
     headNode hNode[numOfVertex];
-    readData(fin, hNode, numOfVertex);
+    int isStart[numOfVertex];
+    readData(fin, hNode, numOfVertex, isStart);
     fclose(fin);
 
-    int i;
-    for(i = 0; i < numOfVertex; i++){
-        printf("%d : %d(count) ", i, hNode[i]->count);
-        nodePtr test = hNode[i]->link;
-        while(test != NULL){
-            printf("%d(dur%d)", test->vertex, test->dur);
-            test = test->link;
-        }
-        printf("\n");
-    }
+    int ee[numOfVertex];
+    createEe(hNode, ee, numOfVertex, isStart);
+    // int i;
+    // for(i = 0; i < numOfVertex; i++){//print Adjacency lists
+    //     printf("%d : %d(count) ", i, hNode[i]->count);
+    //     nodePtr test = hNode[i]->link;
+    //     while(test != NULL){
+    //         printf("%d(dur%d)", test->vertex, test->dur);
+    //         test = test->link;
+    //     }
+    //     printf("\n");
+    // }
     return 0;
 }
 
@@ -58,14 +62,13 @@ void openFile(FILE **fin, const char *fileName){
 	}
 }
 
-nodePtr readData(FILE *fin, headNode hNode[], const int numOfVertex){
+nodePtr readData(FILE *fin, headNode hNode[], const int numOfVertex, int isStart[]){
     int i, j;
     for(i = 0; i < numOfVertex; i++){
         MALLOC(hNode[i], sizeof(*hNode[i]));
-    }
-    for(i = 0; i < numOfVertex; i++){
         hNode[i]->count = 0;
         hNode[i]->link = NULL;
+        isStart[i] = 1;
     }
     int tmpValue;
     headNode tmpHead;
@@ -80,6 +83,7 @@ nodePtr readData(FILE *fin, headNode hNode[], const int numOfVertex){
                 nodePtr tmpNode;
                 MALLOC(tmpNode, sizeof(*tmpNode));
                 tmpNode->vertex = j;
+                isStart[j] = 0;
                 tmpNode->dur = tmpValue;
                 tmpNode->link = NULL;
                 if(tmpHead->count == 0){
@@ -93,5 +97,25 @@ nodePtr readData(FILE *fin, headNode hNode[], const int numOfVertex){
             }
         }
     }
-    fclose(fin);
+}
+
+void createEe(const headNode hNode[], int ee[], const int numOfVertex, const int isStart[]){
+    int i, j, startEvent = 0;
+    int eeStack[numOfVertex];
+	nodePtr current;
+	MALLOC(current, sizeof(*current));
+    for(i = 0; i < numOfVertex; i++){
+        eeStack[i] = -1;//init ee stack
+        ee[i] = 0;//init ee
+        if(isStart[i] == 1){
+			startEvent = i;
+            current = hNode[i]->link;//choose start
+        }
+    }
+    for(i = 0; i < numOfVertex; i++){
+        for(j = 0; j < hNode[startEvent]->count; j++){
+            ee[current->vertex] += current->dur;
+            current = current->link;
+        }
+    }
 }
