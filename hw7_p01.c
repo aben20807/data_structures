@@ -36,9 +36,12 @@ int main()
     int i;
     for(i = 0; i < numOfVertex; i++){
         printf("%d : %d(count) ", i, hNode[i]->count);
-        if(hNode[i]->link != NULL){
-            printf("%d(dur1)\n", hNode[i]->link->dur);
+        nodePtr test = hNode[i]->link;
+        while(test != NULL){
+            printf("%d(dur%d)", test->vertex, test->dur);
+            test = test->link;
         }
+        printf("\n");
     }
     return 0;
 }
