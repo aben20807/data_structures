@@ -11,6 +11,7 @@
 
 typedef struct node *nodePtr;
 typedef struct node{
+	int acti;
     int vertex;
     int dur;
     nodePtr link;
@@ -22,13 +23,14 @@ typedef struct{
 
 void openFile(FILE **, const char *);//open file
 nodePtr readData(FILE *, headNode [], const int);
-void createEe(const headNode [], int [], const int);
+void createEe(const headNode [], int [], const int, int *, int *);
+void createE(int [], const int, const int, const int [], const headNode []);
 
 int main()
 {
     FILE *fin;
     openFile(&fin, FILE_NAME);
-    int numOfVertex = 0;
+    int numOfVertex = 0, numOfActivity =0, start;
     fscanf(fin, "%d", &numOfVertex);
     headNode hNode[numOfVertex];
     int isStart[numOfVertex];
@@ -36,20 +38,23 @@ int main()
     fclose(fin);
 
     int ee[numOfVertex];
-    createEe(hNode, ee, numOfVertex);
+    createEe(hNode, ee, numOfVertex, &numOfActivity, &start);
+	int e[numOfActivity+1];
+	createE(e, start, numOfVertex, ee, hNode);
     int i;
     // for(i = 0; i < numOfVertex; i++){//print Adjacency lists
     //     printf("%d : %d(count) ", i, hNode[i]->count);
     //     nodePtr test = hNode[i]->link;
     //     while(test != NULL){
-    //         printf("%d(dur%d)", test->vertex, test->dur);
+    //         printf("%d(dur%d, acti%d)", test->vertex, test->dur, test->acti);
     //         test = test->link;
     //     }
     //     printf("\n");
     // }
-	for(i = 0; i < numOfVertex; i++){
-		printf("%d\n", ee[i]);
+	for(i = 1; i < numOfActivity+1; i++){
+		printf("%d\n", e[i]);
 	}
+	printf("%d\n", start);
     return 0;
 }
 
@@ -72,7 +77,7 @@ nodePtr readData(FILE *fin, headNode hNode[], const int numOfVertex){
         hNode[i]->count = 0;
         hNode[i]->link = NULL;
     }
-    int tmpValue;
+    int tmpValue, actiCount = 1;
     headNode tmpHead;
     nodePtr tmpCurrent;
     MALLOC(tmpCurrent, sizeof(*tmpCurrent));
@@ -85,6 +90,7 @@ nodePtr readData(FILE *fin, headNode hNode[], const int numOfVertex){
                 nodePtr tmpNode;
                 MALLOC(tmpNode, sizeof(*tmpNode));
                 tmpNode->vertex = j;
+				tmpNode->acti = actiCount++;
 				hNode[j]->count++;
                 tmpNode->dur = tmpValue;
                 tmpNode->link = NULL;
@@ -94,24 +100,26 @@ nodePtr readData(FILE *fin, headNode hNode[], const int numOfVertex){
                 else{
                     tmpCurrent->link = tmpNode;
                 }
-                // hNode[i]->count ++;
                 tmpCurrent = tmpNode;
             }
         }
     }
 }
 
-void createEe(const headNode hNode[], int ee[], const int numOfVertex){
+void createEe(const headNode hNode[], int ee[], const int numOfVertex, int *numOfActivity, int *start){
 	int i, j, k, top;
 	for(i = 0; i < numOfVertex; i++){
         ee[i] = 0;//init ee
+		*numOfActivity += hNode[i]->count;
     }
 	nodePtr ptr;
 	top = -1;
+	*start = -1;
 	for(i = 0; i < numOfVertex; i++){
 		if(!hNode[i]->count){
 			hNode[i]->count = top;
 			top = i;
+			*start = i;
 		}
 	}
 	for(i = 0; i < numOfVertex; i++){
@@ -135,4 +143,44 @@ void createEe(const headNode hNode[], int ee[], const int numOfVertex){
 			}
 		}
 	}
+}
+
+void createE(int e[], int start, const int numOfVertex, const int ee[], const headNode hNode[]){
+	int i, tmpCount = 0;
+	// nodePtr ptr;
+	// MALLOC(ptr, sizeof(*ptr));
+	// ptr = hNode[start]->link;
+	// printf("%d\n",ptr->acti);
+	for(i = 0; i < numOfVertex; i++){//print Adjacency lists
+        printf("%d : %d(count) ", i, hNode[i]->count);
+        nodePtr ptr = hNode[i]->link;
+        while(ptr != NULL){
+            printf("%d ", ee[tmpCount]);
+			e[ptr->acti] = ee[tmpCount];
+            ptr = ptr->link;
+        }
+		tmpCount++;
+        printf("\n");
+    }
+	
+	// for(i = 0; i < numOfActivity;){
+	// 	while(!ptr->link){
+	// 		i++;
+	// 		printf("%d\n", ptr->acti);
+	// 		e[ptr->acti] = ee[tmpCount];
+	// 		ptr = ptr->link;
+	// 	}
+	// 	tmpCount++;
+	// 	ptr = hNode[++start]->link;
+	// }
+	// int count = 0;
+	// for(i = 1; i < numOfActivity+1; i++){
+	// 	if(ptr!=NULL){
+	// 		e[i] = ee[count];
+	// 	}
+	// 	else{
+	// 		count++;
+	// 		ptr = hNode[]->link;
+	// 	}
+	// }
 }
