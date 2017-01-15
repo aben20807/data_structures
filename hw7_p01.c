@@ -24,24 +24,25 @@ typedef struct{
 void openFile(FILE **, const char *);//open file
 nodePtr readData(FILE *, headNode [], const int);
 void createEe(const headNode [], int [], const int, int *, int *);
-void createE(int [], const int, const int, const int [], const headNode []);
+void createE(int [], const int, const int [], const headNode []);
 
 int main()
 {
     FILE *fin;
     openFile(&fin, FILE_NAME);
-    int numOfVertex = 0, numOfActivity =0, start;
+    int numOfVertex = 0, numOfActivity = 0, end = 0;
     fscanf(fin, "%d", &numOfVertex);
     headNode hNode[numOfVertex];
-    int isStart[numOfVertex];
+    // int isStart[numOfVertex];
     readData(fin, hNode, numOfVertex);
     fclose(fin);
 
     int ee[numOfVertex];
-    createEe(hNode, ee, numOfVertex, &numOfActivity, &start);
+    createEe(hNode, ee, numOfVertex, &numOfActivity, &end);
 	int e[numOfActivity+1];
-	createE(e, start, numOfVertex, ee, hNode);
-    int i;
+	createE(e, numOfVertex, ee, hNode);
+
+	int i;
     // for(i = 0; i < numOfVertex; i++){//print Adjacency lists
     //     printf("%d : %d(count) ", i, hNode[i]->count);
     //     nodePtr test = hNode[i]->link;
@@ -51,10 +52,12 @@ int main()
     //     }
     //     printf("\n");
     // }
-	for(i = 1; i < numOfActivity+1; i++){
-		printf("%d\n", e[i]);
+	// printf("activity\te\n");
+	// printf("%d\n", ee[end]);
+	for(i = 1; i <= numOfActivity; i++){
+		printf("a%d\t%d\n", i, e[i]);
 	}
-	printf("%d\n", start);
+	// printf("%d\n", start);
     return 0;
 }
 
@@ -106,7 +109,7 @@ nodePtr readData(FILE *fin, headNode hNode[], const int numOfVertex){
     }
 }
 
-void createEe(const headNode hNode[], int ee[], const int numOfVertex, int *numOfActivity, int *start){
+void createEe(const headNode hNode[], int ee[], const int numOfVertex, int *numOfActivity, int *end){
 	int i, j, k, top;
 	for(i = 0; i < numOfVertex; i++){
         ee[i] = 0;//init ee
@@ -114,12 +117,12 @@ void createEe(const headNode hNode[], int ee[], const int numOfVertex, int *numO
     }
 	nodePtr ptr;
 	top = -1;
-	*start = -1;
+	*end = 0;
 	for(i = 0; i < numOfVertex; i++){
 		if(!hNode[i]->count){
 			hNode[i]->count = top;
 			top = i;
-			*start = i;
+			// *start = i;
 		}
 	}
 	for(i = 0; i < numOfVertex; i++){
@@ -139,48 +142,26 @@ void createEe(const headNode hNode[], int ee[], const int numOfVertex, int *numO
 				if(!hNode[k]->count){
 					hNode[k]->count = top;
 					top = k;
+					*end = top;//detect end event
 				}
 			}
 		}
 	}
+	// *end = top;
 }
 
-void createE(int e[], int start, const int numOfVertex, const int ee[], const headNode hNode[]){
-	int i, tmpCount = 0;
-	// nodePtr ptr;
-	// MALLOC(ptr, sizeof(*ptr));
-	// ptr = hNode[start]->link;
-	// printf("%d\n",ptr->acti);
+void createE(int e[], const int numOfVertex, const int ee[], const headNode hNode[]){
+	int i, tmpCount = 0, numOfActivity = 1;
 	for(i = 0; i < numOfVertex; i++){//print Adjacency lists
-        printf("%d : %d(count) ", i, hNode[i]->count);
+        // printf("%d : %d(count) ", i, hNode[i]->count);
         nodePtr ptr = hNode[i]->link;
         while(ptr != NULL){
-            printf("%d ", ee[tmpCount]);
+            // printf("%d ", tmpCount);
+			numOfActivity++;
 			e[ptr->acti] = ee[tmpCount];
             ptr = ptr->link;
         }
 		tmpCount++;
-        printf("\n");
+        // printf("\n");
     }
-	
-	// for(i = 0; i < numOfActivity;){
-	// 	while(!ptr->link){
-	// 		i++;
-	// 		printf("%d\n", ptr->acti);
-	// 		e[ptr->acti] = ee[tmpCount];
-	// 		ptr = ptr->link;
-	// 	}
-	// 	tmpCount++;
-	// 	ptr = hNode[++start]->link;
-	// }
-	// int count = 0;
-	// for(i = 1; i < numOfActivity+1; i++){
-	// 	if(ptr!=NULL){
-	// 		e[i] = ee[count];
-	// 	}
-	// 	else{
-	// 		count++;
-	// 		ptr = hNode[]->link;
-	// 	}
-	// }
 }
